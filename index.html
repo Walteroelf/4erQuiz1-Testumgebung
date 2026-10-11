@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Logo-Quiz automatisch</title>
+<title>4er-Quiz automatisch</title>
 
 <style>
 :root {
@@ -240,13 +240,13 @@ button.danger,
 
 .question-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
   margin-top: 14px;
 }
 
 .question-list-item {
-  padding: 10px;
+  padding: 12px;
   border-radius: 18px;
 }
 
@@ -264,6 +264,23 @@ button.danger,
   background: white;
   border: 3px solid var(--dark-brown);
   border-radius: 10px;
+}
+
+.question-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.question-actions button {
+  padding: 9px 8px;
+  font-size: 0.78rem;
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.question-actions .delete-question-button {
+  grid-column: 1 / -1;
 }
 
 .hidden-work-area {
@@ -479,6 +496,14 @@ canvas {
   .quiz-controls {
     grid-template-columns: 1fr;
   }
+
+  .question-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .question-actions .delete-question-button {
+    grid-column: auto;
+  }
 }
 
 @media (orientation: portrait) {
@@ -519,7 +544,7 @@ canvas {
 <body>
 <div id="introModal" class="modal-backdrop">
   <div class="modal">
-    <h2>So funktioniert das Logo-Quiz</h2>
+    <h2>So funktioniert das 4er-Quiz</h2>
     <p>
       Fotografiere eine oder mehrere ausgefüllte Fragenkarten.
       Die App erkennt die vier schwarzen Eckmarken automatisch, richtet das Foto gerade aus
@@ -530,6 +555,7 @@ canvas {
       <li>Das Foto darf leicht schräg aufgenommen sein.</li>
       <li>Die App nutzt möglichst genau die schwarzen Rahmen der Textfelder.</li>
       <li>Wenn eine Karte nicht erkannt wird, wird sie übersprungen und gemeldet.</li>
+      <li>In der Fragensammlung kannst du einzelne Aufnahmen löschen oder verschieben.</li>
       <li>Das Quiz ist besonders für ein iPad im Querformat geeignet.</li>
     </ul>
     <button id="introOkButton" class="modal-ok">Okay</button>
@@ -538,7 +564,7 @@ canvas {
 
 <div id="editorView">
   <header>
-    <h1>Logo-Quiz</h1>
+    <h1>4er-Quiz</h1>
   </header>
 
   <main>
@@ -578,7 +604,7 @@ canvas {
   <div class="quiz-inner">
     <div class="quiz-topbar">
       <h1 class="quiz-title">
-        Logo-Quiz <span id="quizProgress" class="quiz-progress">1 / 1</span>
+        4er-Quiz <span id="quizProgress" class="quiz-progress">1 / 1</span>
       </h1>
 
       <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
@@ -802,7 +828,12 @@ async function processFilesAutomatically(files) {
         failedFiles.push(file.name || `Foto ${i + 1}`);
       } else {
         const crops = rectifyAndCrop();
-        questions.push(crops);
+
+        questions.push({
+          ...crops,
+          createdAt: Date.now()
+        });
+
         showLatestCrops(crops);
         updateQuestionCollectionView();
       }
@@ -833,8 +864,14 @@ function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
 
-    img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      reject(new Error("Bild konnte nicht geladen werden."));
+    };
 
     img.src = URL.createObjectURL(file);
   });
@@ -1063,12 +1100,67 @@ function updateQuestionCollectionView() {
     img.src = item.question;
     img.alt = `Vorschau Frage ${index + 1}`;
 
+    const actions = document.createElement("div");
+    actions.className = "question-actions";
+
+    const moveUpButton = document.createElement("button");
+    moveUpButton.type = "button";
+    moveUpButton.className = "secondary";
+    moveUpButton.textContent = "↑ Hoch";
+    moveUpButton.disabled = index === 0;
+    moveUpButton.addEventListener("click", () => moveQuestion(index, -1));
+
+    const moveDownButton = document.createElement("button");
+    moveDownButton.type = "button";
+    moveDownButton.className = "secondary";
+    moveDownButton.textContent = "↓ Runter";
+    moveDownButton.disabled = index === questions.length - 1;
+    moveDownButton.addEventListener("click", () => moveQuestion(index, 1));
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger delete-question-button";
+    deleteButton.textContent = "Löschen";
+    deleteButton.addEventListener("click", () => deleteQuestion(index));
+
+    actions.appendChild(moveUpButton);
+    actions.appendChild(moveDownButton);
+    actions.appendChild(deleteButton);
+
     box.appendChild(title);
     box.appendChild(img);
+    box.appendChild(actions);
+
     questionList.appendChild(box);
   });
 
   updateButtonStates();
+}
+
+function moveQuestion(index, direction) {
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= questions.length) return;
+
+  const movedQuestion = questions[index];
+  questions.splice(index, 1);
+  questions.splice(newIndex, 0, movedQuestion);
+
+  updateQuestionCollectionView();
+}
+
+function deleteQuestion(index) {
+  const confirmed = confirm(`Möchtest du Frage ${index + 1} wirklich löschen?`);
+
+  if (!confirmed) return;
+
+  questions.splice(index, 1);
+
+  if (currentQuizIndex >= questions.length) {
+    currentQuizIndex = Math.max(0, questions.length - 1);
+  }
+
+  updateQuestionCollectionView();
 }
 
 function startQuiz() {
