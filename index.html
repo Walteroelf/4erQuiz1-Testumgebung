@@ -346,7 +346,7 @@ canvas {
 .quiz-screen {
   display: none;
   width: 100vw;
-  height: 100dvh;
+  height: min(100dvh, calc(100vh - 58px));
   min-height: 560px;
   overflow: hidden;
   padding: 10px 14px 12px;
@@ -362,6 +362,13 @@ canvas {
     linear-gradient(135deg, var(--brown), var(--red) 55%, var(--orange));
 }
 
+.quiz-screen:fullscreen,
+.quiz-screen:-webkit-full-screen {
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+}
+
 .quiz-inner {
   height: 100%;
   max-width: 1200px;
@@ -374,6 +381,13 @@ canvas {
 .quiz-topbar {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.quiz-top-actions {
+  justify-self: end;
+  display: flex;
   align-items: center;
   gap: 10px;
 }
@@ -411,6 +425,19 @@ canvas {
   white-space: nowrap;
 }
 
+.quiz-fullscreen-button {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffe083, var(--sun));
+  color: var(--brown);
+}
+
 .quiz-question {
   min-height: 0;
   padding: 8px;
@@ -438,7 +465,7 @@ canvas {
   min-height: 0;
   padding: 9px;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
   overflow: hidden;
 }
@@ -451,6 +478,7 @@ canvas {
 
 .big-letter {
   flex: 0 0 auto;
+  align-self: center;
   width: clamp(48px, 7vw, 74px);
   height: clamp(48px, 7vw, 74px);
   border: 4px solid var(--dark-brown);
@@ -471,8 +499,9 @@ canvas {
 }
 
 .answer-image-wrap {
-  flex: 1;
+  flex: 1 1 auto;
   height: 100%;
+  aspect-ratio: 402 / 153;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -486,7 +515,7 @@ canvas {
 .answer-image-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
   display: block;
 }
 
@@ -523,13 +552,13 @@ canvas {
 @media (orientation: portrait) {
   .quiz-screen {
     height: auto;
-    min-height: 100dvh;
+    min-height: calc(100dvh - 58px);
     overflow: auto;
   }
 
   .quiz-inner {
     height: auto;
-    min-height: calc(100dvh - 22px);
+    min-height: calc(100dvh - 76px);
     grid-template-rows: auto auto auto auto;
   }
 
@@ -551,6 +580,10 @@ canvas {
   }
 
   .quiz-close-button {
+    justify-self: center;
+  }
+
+  .quiz-top-actions {
     justify-self: center;
   }
 }
@@ -630,9 +663,15 @@ canvas {
         4er-Quiz <span id="quizProgress" class="quiz-progress">1 / 1</span>
       </h1>
 
-      <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
-        Abbrechen
-      </button>
+      <div class="quiz-top-actions">
+        <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
+          Abbrechen
+        </button>
+
+        <button id="fullscreenButton" class="quiz-fullscreen-button" aria-label="Vollbild einschalten" title="Vollbild einschalten">
+          ↗
+        </button>
+      </div>
     </div>
 
     <div class="quiz-question">
@@ -753,6 +792,7 @@ const answerBoxD = document.getElementById("answerBoxD");
 
 const revealButton = document.getElementById("revealButton");
 const backButton = document.getElementById("backButton");
+const fullscreenButton = document.getElementById("fullscreenButton");
 const prevQuestionButton = document.getElementById("prevQuestionButton");
 const nextQuestionButton = document.getElementById("nextQuestionButton");
 
@@ -762,7 +802,6 @@ let questions = [];
 let currentQuizIndex = 0;
 let correctLetter = null;
 let isProcessing = false;
-let answerRevealed = false;
 
 const NORMALIZED_WIDTH = 1021;
 const NORMALIZED_HEIGHT = 724;
@@ -791,8 +830,11 @@ startQuizButton.addEventListener("click", startQuiz);
 clearAllButton.addEventListener("click", clearEverything);
 revealButton.addEventListener("click", revealCorrectAnswer);
 backButton.addEventListener("click", confirmBackToEditor);
+fullscreenButton.addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", updateFullscreenButton);
+document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
 prevQuestionButton.addEventListener("click", showPreviousQuestion);
-nextQuestionButton.addEventListener("click", handleNextOrFinish);
+nextQuestionButton.addEventListener("click", showNextQuestion);
 
 updateQuestionCollectionView();
 
@@ -804,14 +846,12 @@ function setProgress(done, total) {
   }
 
   progressOuter.style.display = "block";
-
   const percent = Math.round((done / total) * 100);
   progressInner.style.width = percent + "%";
 }
 
 function updateButtonStates() {
   const hasQuestions = questions.length > 0;
-
   startQuizButton.disabled = !hasQuestions || isProcessing;
 
   if (hasQuestions) {
@@ -1203,43 +1243,16 @@ function startQuiz() {
   }
 
   currentQuizIndex = 0;
-  answerRevealed = false;
 
   editorView.style.display = "none";
   quizView.style.display = "block";
 
   showQuizQuestion(currentQuizIndex);
-  enterFullscreen();
-}
-
-function enterFullscreen() {
-  const element = quizView;
-
-  if (document.fullscreenElement) return;
-
-  if (element.requestFullscreen) {
-    element.requestFullscreen().catch(() => {});
-  } else if (element.webkitRequestFullscreen) {
-    element.webkitRequestFullscreen();
-  } else if (element.msRequestFullscreen) {
-    element.msRequestFullscreen();
-  }
-}
-
-function exitFullscreen() {
-  if (document.fullscreenElement && document.exitFullscreen) {
-    document.exitFullscreen().catch(() => {});
-  } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  } else if (document.msFullscreenElement && document.msExitFullscreen) {
-    document.msExitFullscreen();
-  }
+  updateFullscreenButton();
 }
 
 function showQuizQuestion(index) {
   removeCorrectHighlight();
-
-  answerRevealed = false;
 
   const item = questions[index];
 
@@ -1276,14 +1289,7 @@ function showQuizQuestion(index) {
   });
 
   prevQuestionButton.disabled = index === 0;
-
-  if (index === questions.length - 1) {
-    nextQuestionButton.textContent = "Nächste Frage";
-    nextQuestionButton.disabled = true;
-  } else {
-    nextQuestionButton.textContent = "Nächste Frage";
-    nextQuestionButton.disabled = false;
-  }
+  nextQuestionButton.disabled = index === questions.length - 1;
 }
 
 function showPreviousQuestion() {
@@ -1291,15 +1297,6 @@ function showPreviousQuestion() {
 
   currentQuizIndex--;
   showQuizQuestion(currentQuizIndex);
-}
-
-function handleNextOrFinish() {
-  if (currentQuizIndex === questions.length - 1 && answerRevealed) {
-    backToEditor();
-    return;
-  }
-
-  showNextQuestion();
 }
 
 function showNextQuestion() {
@@ -1328,13 +1325,6 @@ function revealCorrectAnswer() {
 
   const box = document.getElementById("answerBox" + correctLetter);
   box.classList.add("correct");
-
-  answerRevealed = true;
-
-  if (currentQuizIndex === questions.length - 1) {
-    nextQuestionButton.textContent = "Quiz beenden";
-    nextQuestionButton.disabled = false;
-  }
 }
 
 function removeCorrectHighlight() {
@@ -1351,16 +1341,65 @@ function confirmBackToEditor() {
   backToEditor();
 }
 
+async function toggleFullscreen() {
+  try {
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (!isFullscreen) {
+      if (quizView.requestFullscreen) {
+        await quizView.requestFullscreen();
+      } else if (quizView.webkitRequestFullscreen) {
+        await quizView.webkitRequestFullscreen();
+      } else if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        await document.documentElement.webkitRequestFullscreen();
+      } else {
+        alert("Der Vollbildmodus wird von diesem Browser leider nicht unterstützt.");
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  updateFullscreenButton();
+}
+
+function updateFullscreenButton() {
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+  if (isFullscreen) {
+    fullscreenButton.textContent = "↙";
+    fullscreenButton.setAttribute("aria-label", "Vollbild beenden");
+    fullscreenButton.setAttribute("title", "Vollbild beenden");
+  } else {
+    fullscreenButton.textContent = "↗";
+    fullscreenButton.setAttribute("aria-label", "Vollbild einschalten");
+    fullscreenButton.setAttribute("title", "Vollbild einschalten");
+  }
+}
+
 function backToEditor() {
   quizView.style.display = "none";
   editorView.style.display = "block";
 
   removeCorrectHighlight();
 
-  answerRevealed = false;
-  nextQuestionButton.textContent = "Nächste Frage";
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
 
-  exitFullscreen();
+  if (isFullscreen) {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
 }
 
 function clearEverything() {
@@ -1375,7 +1414,6 @@ function clearEverything() {
   markerPoints = null;
   isProcessing = false;
   waitingFiles = [];
-  answerRevealed = false;
 
   imageInput.value = "";
 
@@ -1389,8 +1427,6 @@ function clearEverything() {
   questionList.innerHTML = "";
   questionCount.textContent = "0";
   failedList.textContent = "";
-
-  nextQuestionButton.textContent = "Nächste Frage";
 
   setProgress(0, 0);
 
