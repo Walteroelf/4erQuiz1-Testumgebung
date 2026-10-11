@@ -145,15 +145,27 @@ input[type="file"] {
   display: none;
 }
 
-.controls,
-.quiz-controls {
+.controls {
   display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
+  margin-top: 8px;
 }
 
-.controls {
-  grid-template-columns: 1fr 1fr;
-  margin-top: 8px;
+.start-quiz-button {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.25rem;
+}
+
+.bottom-delete-section {
+  display: none;
+}
+
+.bottom-delete-section button {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.18rem;
 }
 
 button {
@@ -332,10 +344,16 @@ canvas {
 .quiz-screen {
   display: none;
   width: 100vw;
-  height: 100dvh;
-  min-height: 100vh;
+
+  /*
+    Absichtlich etwas niedriger als die volle Browserhöhe:
+    So bleiben auf dem iPad ohne Vollbild die unteren Quiz-Buttons besser erreichbar.
+  */
+  height: min(100dvh, calc(100vh - 58px));
+  min-height: 560px;
+
   overflow: hidden;
-  padding: 14px;
+  padding: 10px 14px 12px;
   color: var(--cream);
   background:
     radial-gradient(circle at 15% 20%, rgba(246,200,95,0.28) 0 8%, transparent 9%),
@@ -353,38 +371,38 @@ canvas {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-rows: auto minmax(145px, 28vh) 1fr auto;
-  gap: 13px;
+  grid-template-rows: auto minmax(120px, 24vh) minmax(230px, 1fr) auto;
+  gap: 9px;
 }
 
 .quiz-topbar {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .quiz-title {
   justify-self: center;
   margin: 0;
   color: var(--sun);
-  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-size: clamp(1.6rem, 4.3vw, 3rem);
   line-height: 1;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 3px;
-  text-shadow: 5px 5px 0 var(--shadow);
+  text-shadow: 4px 4px 0 var(--shadow);
 }
 
 .quiz-progress {
   display: inline-block;
   margin-left: 12px;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border: 4px solid var(--cream);
   border-radius: 999px;
   background: var(--red);
   color: var(--cream);
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-size: clamp(0.95rem, 2.2vw, 1.35rem);
   vertical-align: middle;
   white-space: nowrap;
   box-shadow: 4px 4px 0 var(--shadow);
@@ -392,14 +410,14 @@ canvas {
 
 .quiz-close-button {
   justify-self: end;
-  padding: 13px 22px;
-  font-size: clamp(1rem, 2.3vw, 1.2rem);
+  padding: 11px 20px;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
   white-space: nowrap;
 }
 
 .quiz-question {
   min-height: 0;
-  padding: 10px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -417,15 +435,15 @@ canvas {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 
 .quiz-answer {
   min-height: 0;
-  padding: 12px;
+  padding: 9px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -437,8 +455,8 @@ canvas {
 
 .big-letter {
   flex: 0 0 auto;
-  width: clamp(56px, 8vw, 82px);
-  height: clamp(56px, 8vw, 82px);
+  width: clamp(48px, 7vw, 74px);
+  height: clamp(48px, 7vw, 74px);
   border: 4px solid var(--dark-brown);
   border-radius: 50%;
   background: var(--red);
@@ -446,7 +464,7 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.8rem, 4.5vw, 2.7rem);
   font-weight: 1000;
   box-shadow: 5px 5px 0 var(--shadow);
 }
@@ -477,15 +495,15 @@ canvas {
 }
 
 .quiz-controls {
+  display: grid;
   grid-template-columns: repeat(3, auto);
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 9px;
 }
 
 .quiz-controls button {
-  padding: 11px 18px;
-  font-size: 0.95rem;
+  padding: 10px 16px;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 700px) {
@@ -508,12 +526,14 @@ canvas {
 
 @media (orientation: portrait) {
   .quiz-screen {
+    height: auto;
+    min-height: calc(100dvh - 58px);
     overflow: auto;
   }
 
   .quiz-inner {
     height: auto;
-    min-height: 100dvh;
+    min-height: calc(100dvh - 76px);
     grid-template-rows: auto auto auto auto;
   }
 
@@ -523,11 +543,11 @@ canvas {
   }
 
   .quiz-answer {
-    min-height: 140px;
+    min-height: 126px;
   }
 
   .quiz-question {
-    min-height: 170px;
+    min-height: 150px;
   }
 
   .quiz-topbar {
@@ -587,8 +607,7 @@ canvas {
         <div id="failedList" class="failed-list"></div>
 
         <div class="controls">
-          <button id="startQuizButton" class="success" disabled>Quiz starten</button>
-          <button id="clearAllButton" class="danger">Alles löschen</button>
+          <button id="startQuizButton" class="success start-quiz-button" disabled>Quiz starten</button>
         </div>
       </div>
     </section>
@@ -596,6 +615,10 @@ canvas {
     <section id="questionListSection" class="card question-list-section">
       <h2>Fragensammlung</h2>
       <div id="questionList" class="question-list"></div>
+    </section>
+
+    <section id="bottomDeleteSection" class="card bottom-delete-section">
+      <button id="clearAllButton" class="danger">Alles löschen</button>
     </section>
   </main>
 </div>
@@ -692,6 +715,7 @@ const introOkButton = document.getElementById("introOkButton");
 const imageInput = document.getElementById("imageInput");
 const startQuizButton = document.getElementById("startQuizButton");
 const clearAllButton = document.getElementById("clearAllButton");
+const bottomDeleteSection = document.getElementById("bottomDeleteSection");
 const progressOuter = document.getElementById("progressOuter");
 const progressInner = document.getElementById("progressInner");
 const failedList = document.getElementById("failedList");
@@ -787,6 +811,12 @@ function setProgress(done, total) {
 function updateButtonStates() {
   const hasQuestions = questions.length > 0;
   startQuizButton.disabled = !hasQuestions || isProcessing;
+
+  if (hasQuestions) {
+    bottomDeleteSection.style.display = "block";
+  } else {
+    bottomDeleteSection.style.display = "none";
+  }
 }
 
 function handleFileSelection(event) {
@@ -1175,9 +1205,10 @@ function startQuiz() {
 
   showQuizQuestion(currentQuizIndex);
 
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
+  /*
+    Kein automatischer Vollbildmodus:
+    So bleibt die normale iPad-Browseransicht erhalten und die Quiz-Höhe ist besser kontrollierbar.
+  */
 }
 
 function showQuizQuestion(index) {
