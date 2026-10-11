@@ -1,8 +1,3 @@
----
-meta-CocoaVersion: "2575.7"
-
-## meta-Generator: Cocoa HTML Writer
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -351,8 +346,9 @@ canvas {
 .quiz-screen {
   display: none;
   width: 100vw;
-  min-height: 100dvh;
-  overflow: auto;
+  height: 100dvh;
+  min-height: 560px;
+  overflow: hidden;
   padding: 10px 14px 12px;
   color: var(--cream);
   background:
@@ -367,7 +363,7 @@ canvas {
 }
 
 .quiz-inner {
-  min-height: calc(100dvh - 22px);
+  height: 100%;
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -378,13 +374,6 @@ canvas {
 .quiz-topbar {
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
-}
-
-.quiz-top-actions {
-  justify-self: end;
-  display: flex;
   align-items: center;
   gap: 10px;
 }
@@ -449,7 +438,7 @@ canvas {
   min-height: 0;
   padding: 9px;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 10px;
   overflow: hidden;
 }
@@ -462,7 +451,6 @@ canvas {
 
 .big-letter {
   flex: 0 0 auto;
-  align-self: center;
   width: clamp(48px, 7vw, 74px);
   height: clamp(48px, 7vw, 74px);
   border: 4px solid var(--dark-brown);
@@ -483,9 +471,8 @@ canvas {
 }
 
 .answer-image-wrap {
-  flex: 1 1 auto;
+  flex: 1;
   height: 100%;
-  aspect-ratio: 402 / 153;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -499,7 +486,7 @@ canvas {
 .answer-image-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: contain;
   display: block;
 }
 
@@ -564,10 +551,6 @@ canvas {
   }
 
   .quiz-close-button {
-    justify-self: center;
-  }
-
-  .quiz-top-actions {
     justify-self: center;
   }
 }
@@ -647,11 +630,9 @@ canvas {
         4er-Quiz <span id="quizProgress" class="quiz-progress">1 / 1</span>
       </h1>
 
-      <div class="quiz-top-actions">
-        <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
-          Abbrechen
-        </button>
-      </div>
+      <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
+        Abbrechen
+      </button>
     </div>
 
     <div class="quiz-question">
@@ -823,12 +804,14 @@ function setProgress(done, total) {
   }
 
   progressOuter.style.display = "block";
+
   const percent = Math.round((done / total) * 100);
   progressInner.style.width = percent + "%";
 }
 
 function updateButtonStates() {
   const hasQuestions = questions.length > 0;
+
   startQuizButton.disabled = !hasQuestions || isProcessing;
 
   if (hasQuestions) {
@@ -1220,11 +1203,37 @@ function startQuiz() {
   }
 
   currentQuizIndex = 0;
+  answerRevealed = false;
 
   editorView.style.display = "none";
   quizView.style.display = "block";
 
   showQuizQuestion(currentQuizIndex);
+  enterFullscreen();
+}
+
+function enterFullscreen() {
+  const element = quizView;
+
+  if (document.fullscreenElement) return;
+
+  if (element.requestFullscreen) {
+    element.requestFullscreen().catch(() => {});
+  } else if (element.webkitRequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else if (element.msRequestFullscreen) {
+    element.msRequestFullscreen();
+  }
+}
+
+function exitFullscreen() {
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msFullscreenElement && document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
 }
 
 function showQuizQuestion(index) {
@@ -1350,6 +1359,8 @@ function backToEditor() {
 
   answerRevealed = false;
   nextQuestionButton.textContent = "Nächste Frage";
+
+  exitFullscreen();
 }
 
 function clearEverything() {
