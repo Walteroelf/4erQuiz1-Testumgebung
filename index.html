@@ -14,7 +14,6 @@
   --brown: #3f2415;
   --dark-brown: #27150c;
   --green: #6f8f3d;
-  --blue: #2f6f7e;
   --danger: #b7352a;
   --shadow: #2a160d;
   --radius: 28px;
@@ -196,17 +195,6 @@ button.success {
 button.danger,
 .quiz-close-button {
   background: linear-gradient(135deg, #d94a31, var(--danger));
-}
-
-.status {
-  padding: 15px 17px;
-  background: #ffe7a3;
-  border: 4px solid var(--dark-brown);
-  border-left: 12px solid var(--red);
-  border-radius: 18px;
-  font-weight: 800;
-  line-height: 1.4;
-  box-shadow: 5px 5px 0 rgba(42,22,13,0.35);
 }
 
 .question-counter-box {
@@ -562,10 +550,6 @@ canvas {
 
         <input id="imageInput" type="file" accept="image/*" capture="environment" multiple />
 
-        <div id="statusBox" class="status">
-          OpenCV.js wird geladen. Bitte einen Moment warten ...
-        </div>
-
         <div class="progress-outer" id="progressOuter">
           <div class="progress-inner" id="progressInner"></div>
         </div>
@@ -598,7 +582,7 @@ canvas {
       </h1>
 
       <button id="backButton" class="quiz-close-button" aria-label="Quiz abbrechen">
-        Abbruch
+        Abbrechen
       </button>
     </div>
 
@@ -608,28 +592,28 @@ canvas {
 
     <div class="quiz-answers">
       <div id="answerBoxA" class="quiz-answer">
-        <div class="big-letter letter-a">A</div>
+        <div class="big-letter">A</div>
         <div class="answer-image-wrap">
           <img id="quizAnswerA" alt="Antwort A" />
         </div>
       </div>
 
       <div id="answerBoxB" class="quiz-answer">
-        <div class="big-letter letter-b">B</div>
+        <div class="big-letter">B</div>
         <div class="answer-image-wrap">
           <img id="quizAnswerB" alt="Antwort B" />
         </div>
       </div>
 
       <div id="answerBoxC" class="quiz-answer">
-        <div class="big-letter letter-c">C</div>
+        <div class="big-letter">C</div>
         <div class="answer-image-wrap">
           <img id="quizAnswerC" alt="Antwort C" />
         </div>
       </div>
 
       <div id="answerBoxD" class="quiz-answer">
-        <div class="big-letter letter-d">D</div>
+        <div class="big-letter">D</div>
         <div class="answer-image-wrap">
           <img id="quizAnswerD" alt="Antwort D" />
         </div>
@@ -664,7 +648,6 @@ let waitingFiles = [];
 window.Module = {
   onRuntimeInitialized() {
     cvReady = true;
-    setStatus("Bereit. Tippe auf „Foto aufnehmen“.");
     updateButtonStates();
 
     if (waitingFiles.length > 0) {
@@ -683,7 +666,6 @@ const introOkButton = document.getElementById("introOkButton");
 const imageInput = document.getElementById("imageInput");
 const startQuizButton = document.getElementById("startQuizButton");
 const clearAllButton = document.getElementById("clearAllButton");
-const statusBox = document.getElementById("statusBox");
 const progressOuter = document.getElementById("progressOuter");
 const progressInner = document.getElementById("progressInner");
 const failedList = document.getElementById("failedList");
@@ -758,15 +740,11 @@ imageInput.addEventListener("change", handleFileSelection);
 startQuizButton.addEventListener("click", startQuiz);
 clearAllButton.addEventListener("click", clearEverything);
 revealButton.addEventListener("click", revealCorrectAnswer);
-backButton.addEventListener("click", backToEditor);
+backButton.addEventListener("click", confirmBackToEditor);
 prevQuestionButton.addEventListener("click", showPreviousQuestion);
 nextQuestionButton.addEventListener("click", showNextQuestion);
 
 updateQuestionCollectionView();
-
-function setStatus(message) {
-  statusBox.textContent = message;
-}
 
 function setProgress(done, total) {
   if (total <= 0) {
@@ -792,7 +770,6 @@ function handleFileSelection(event) {
 
   if (!cvReady) {
     waitingFiles = files;
-    setStatus("Die Bildverarbeitung lädt noch. Das Foto wird danach automatisch verarbeitet.");
     return;
   }
 
@@ -811,7 +788,6 @@ async function processFilesAutomatically(files) {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    setStatus(`Verarbeite Foto ${i + 1} von ${files.length} ...`);
 
     try {
       const image = await loadImageFromFile(file);
@@ -839,10 +815,8 @@ async function processFilesAutomatically(files) {
   }
 
   if (failedFiles.length === 0) {
-    setStatus(`Fertig. ${files.length} Foto(s) wurden verarbeitet.`);
     failedList.textContent = "";
   } else {
-    setStatus(`Fertig. ${files.length - failedFiles.length} von ${files.length} Foto(s) wurden erkannt.`);
     failedList.textContent = `Nicht erkannt: ${failedFiles.join(", ")}`;
   }
 
@@ -1194,6 +1168,14 @@ function removeCorrectHighlight() {
   });
 }
 
+function confirmBackToEditor() {
+  const reallyAbort = confirm("Möchtest du das Quiz wirklich abbrechen?");
+
+  if (!reallyAbort) return;
+
+  backToEditor();
+}
+
 function backToEditor() {
   quizView.style.display = "none";
   editorView.style.display = "block";
@@ -1236,7 +1218,6 @@ function clearEverything() {
   rectifiedCtx.clearRect(0, 0, rectifiedCanvas.width, rectifiedCanvas.height);
   originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
 
-  setStatus(cvReady ? "Alles gelöscht. Tippe auf „Foto aufnehmen“." : "OpenCV.js wird geladen ...");
   updateButtonStates();
 }
 </script>
