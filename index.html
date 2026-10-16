@@ -2,7 +2,22 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <!--
+    Über "Teilen > Zum Home-Bildschirm" startet die App ohne
+    Safari-Leisten, also dauerhaft randlos.
+  -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="4er-Quiz">
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  >
   <title>4er-Quiz automatisch</title>
 
   <style>
@@ -284,22 +299,39 @@
       margin-top: 16px;
     }
 
+    /*
+     * Die Quiz-Ansicht füllt genau den sichtbaren Bereich, mit
+     * und ohne Vollbild. "position: fixed" mit "inset: 0" richtet
+     * sich in Safari nach dem tatsächlich sichtbaren Teil (ohne
+     * Adress- und Werkzeugleiste), anders als 100vh. So bleiben
+     * die Knöpfe unten immer im Bild.
+     */
     .quiz-screen {
       display: none;
-      width: 100vw;
-      min-height: 100vh;
-      padding: 12px;
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      overflow: hidden;
+      padding:
+        max(10px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
       color: var(--cream);
       background: linear-gradient(135deg, var(--brown), var(--red), var(--orange));
     }
 
     .quiz-inner {
       max-width: 1200px;
-      min-height: calc(100vh - 24px);
-      margin: auto;
+      height: 100%;
+      margin: 0 auto;
       display: grid;
-      grid-template-rows: auto minmax(120px, 24vh) minmax(230px, 1fr) auto;
-      gap: 10px;
+      grid-template-rows:
+        auto
+        minmax(0, 1fr)
+        minmax(0, 2fr)
+        auto;
+      gap: clamp(6px, 1.4vh, 12px);
     }
 
     .quiz-topbar {
@@ -311,6 +343,7 @@
 
     .quiz-title {
       margin: 0;
+      font-size: clamp(1.3rem, 4.5vh, 2.2rem);
       text-align: center;
       color: var(--sun);
       text-transform: uppercase;
@@ -348,8 +381,8 @@
     }
 
     .quiz-question img {
-      max-width: 100%;
-      max-height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
     }
 
@@ -376,8 +409,8 @@
     }
 
     .big-letter {
-      width: 64px;
-      height: 64px;
+      width: clamp(40px, 8vh, 64px);
+      height: clamp(40px, 8vh, 64px);
       flex: 0 0 auto;
       align-self: center;
       display: flex;
@@ -387,7 +420,7 @@
       border-radius: 50%;
       background: var(--red);
       color: var(--cream);
-      font-size: 2.3rem;
+      font-size: clamp(1.4rem, 4.5vh, 2.3rem);
       font-weight: bold;
     }
 
@@ -403,10 +436,13 @@
       border-radius: 12px;
     }
 
+    /*
+     * "contain" statt "fill": Die Handschrift wird nicht verzerrt.
+     */
     .answer-image-wrap img {
       width: 100%;
       height: 100%;
-      object-fit: fill;
+      object-fit: contain;
     }
 
     .quiz-controls {
@@ -416,8 +452,38 @@
       gap: 9px;
     }
 
+    .quiz-controls button,
+    .quiz-top-actions button {
+      padding: clamp(8px, 1.6vh, 14px) clamp(14px, 2vw, 22px);
+      font-size: clamp(.9rem, 2.2vh, 1.1rem);
+    }
+
+    .quiz-top-actions .quiz-fullscreen-button {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
     .hidden-work-area {
       display: none;
+    }
+
+    /*
+     * Hochkant (iPad hochkant, Handy): Antworten untereinander,
+     * so sind sie breit wie die Antwortfelder der Karte.
+     */
+    @media (orientation: portrait) {
+      .quiz-inner {
+        grid-template-rows:
+          auto
+          minmax(0, 1fr)
+          minmax(0, 3fr)
+          auto;
+      }
+
+      .quiz-answers {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 700px) {
@@ -429,17 +495,13 @@
         justify-content: center;
       }
 
-      .quiz-answers {
-        grid-template-columns: 1fr;
-        grid-template-rows: none;
-      }
-
-      .quiz-answer {
-        min-height: 126px;
-      }
-
       .quiz-controls {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .quiz-controls button {
+        padding: 8px 6px;
+        font-size: .85rem;
       }
     }
   </style>
@@ -884,6 +946,25 @@
       "fullscreenchange",
       updateFullscreenButton
     );
+    document.addEventListener(
+      "webkitfullscreenchange",
+      updateFullscreenButton
+    );
+
+    /*
+     * Als App vom Home-Bildschirm gestartet ist die Ansicht schon
+     * randlos; ohne Vollbild-Unterstützung (z. B. iPhone) wird der
+     * Knopf ausgeblendet.
+     */
+    const isStandalone =
+      window.navigator.standalone === true ||
+      window.matchMedia("(display-mode: standalone)").matches;
+    const canFullscreen =
+      !!(quizView.requestFullscreen || quizView.webkitRequestFullscreen);
+
+    if (isStandalone || !canFullscreen) {
+      fullscreenButton.style.display = "none";
+    }
 
     updateQuestionCollectionView();
 
@@ -1987,8 +2068,11 @@
       });
 
       prevQuestionButton.disabled = index === 0;
-      nextQuestionButton.disabled =
-        index === questions.length - 1;
+
+      const isLast = index === questions.length - 1;
+      nextQuestionButton.textContent =
+        isLast ? "Quiz beenden" : "Nächste Frage";
+      nextQuestionButton.classList.toggle("success", isLast);
     }
 
     function shuffleArray(array) {
@@ -2036,6 +2120,7 @@
 
     function showNextQuestion() {
       if (currentQuizIndex >= questions.length - 1) {
+        leaveQuiz();
         return;
       }
 
@@ -2048,29 +2133,57 @@
         return;
       }
 
+      leaveQuiz();
+    }
+
+    function leaveQuiz() {
+      if (getFullscreenElement()) {
+        exitFullscreen();
+      }
+
       quizView.style.display = "none";
       editorView.style.display = "block";
       removeCorrectHighlight();
     }
 
-    async function toggleFullscreen() {
-      const active =
-        document.fullscreenElement;
+    /*
+     * Ältere iPadOS-Versionen kennen Vollbild nur mit dem
+     * Präfix "webkit".
+     */
+    function getFullscreenElement() {
+      return document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        null;
+    }
 
-      if (!active) {
-        if (quizView.requestFullscreen) {
-          await quizView.requestFullscreen();
-        }
-      } else if (document.exitFullscreen) {
-        await document.exitFullscreen();
+    function exitFullscreen() {
+      const exit = document.exitFullscreen ||
+        document.webkitExitFullscreen;
+
+      if (exit) {
+        Promise.resolve(exit.call(document)).catch(() => {});
+      }
+    }
+
+    function toggleFullscreen() {
+      if (getFullscreenElement()) {
+        exitFullscreen();
+        return;
       }
 
-      updateFullscreenButton();
+      const request = quizView.requestFullscreen ||
+        quizView.webkitRequestFullscreen;
+
+      if (request) {
+        Promise.resolve(request.call(quizView)).catch(error => {
+          console.warn("Vollbild nicht möglich.", error);
+        });
+      }
     }
 
     function updateFullscreenButton() {
       fullscreenButton.textContent =
-        document.fullscreenElement ? "↙" : "↗";
+        getFullscreenElement() ? "↙" : "↗";
     }
 
     function clearEverything() {
