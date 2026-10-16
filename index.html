@@ -411,12 +411,18 @@
 
       <p>
         Fotografiere eine oder mehrere ausgefüllte Fragekarten.
-        Die App erkennt die vier Eckmarken automatisch. Die Ecke mit dem
-        Dreieck wird dabei als oben links erkannt.
+        Die App erkennt die vier Eckmarken automatisch.
+      </p>
+
+      <p>
+        <a href="vorlage/quiz-vorlage.pdf" target="_blank">
+          Neue Quiz-Vorlage zum Ausdrucken (PDF)
+        </a>
       </p>
 
       <ul>
         <li>Alle vier Eckmarken müssen sichtbar sein.</li>
+        <li>Der weiße Rand um die Eckmarken darf nicht verdeckt sein.</li>
         <li>Das Foto darf schräg aufgenommen sein.</li>
         <li>Die Karte darf auch auf dem Kopf stehen.</li>
         <li>Nicht erkannte Fotos werden gemeldet.</li>
@@ -636,69 +642,135 @@
 
     let loadedImage = null;
     let markerPoints = null;
+    let activeLayout = null;
     let questions = [];
     let currentQuizIndex = 0;
     let correctLetter = null;
     let isProcessing = false;
 
     /*
-     * Alle Maße stammen aus der Quiz-Vorlage (2000 x 1563 Pixel)
-     * und sind hier halbiert. Die Eckmarken-Punkte sind die
-     * Mittelpunkte der schwarzen Quadrate, die Felder liegen
-     * knapp innerhalb der schwarzen Rahmen.
+     * Alle Maße stammen aus den Quiz-Vorlagen (2000 x 1563 Pixel)
+     * und sind hier halbiert. Die Felder liegen knapp innerhalb
+     * der schwarzen Rahmen.
      */
     const NORMALIZED_WIDTH = 1000;
     const NORMALIZED_HEIGHT = 782;
 
-    const TARGET_MARKERS = {
-      topLeft: {
-        x: 60.5,
-        y: 55
+    const LAYOUTS = {
+      /*
+       * Neue Vorlage (vorlage/quiz-vorlage.svg) mit ArUco-Marken
+       * aus DICT_4X4_50: 0 oben links, 1 oben rechts,
+       * 2 unten rechts, 3 unten links. Die Punkte sind die
+       * äußeren Ecken der Marken.
+       */
+      aruco: {
+        markers: {
+          topLeft: {
+            x: 60,
+            y: 60
+          },
+          topRight: {
+            x: 940,
+            y: 60
+          },
+          bottomRight: {
+            x: 940,
+            y: 721.5
+          },
+          bottomLeft: {
+            x: 60,
+            y: 721.5
+          }
+        },
+        fields: {
+          question: {
+            x: 70,
+            y: 150,
+            w: 860,
+            h: 120
+          },
+          correct: {
+            x: 70,
+            y: 333,
+            w: 410,
+            h: 115
+          },
+          wrong1: {
+            x: 520,
+            y: 333,
+            w: 410,
+            h: 115
+          },
+          wrong2: {
+            x: 70,
+            y: 508,
+            w: 410,
+            h: 115
+          },
+          wrong3: {
+            x: 520,
+            y: 508,
+            w: 410,
+            h: 115
+          }
+        }
       },
-      topRight: {
-        x: 937.5,
-        y: 55
-      },
-      bottomRight: {
-        x: 936.25,
-        y: 730.75
-      },
-      bottomLeft: {
-        x: 59.5,
-        y: 730.75
-      }
-    };
 
-    const CROP_FIELDS = {
-      question: {
-        x: 39,
-        y: 103,
-        w: 920,
-        h: 156
-      },
-      correct: {
-        x: 36,
-        y: 312,
-        w: 439,
-        h: 156
-      },
-      wrong1: {
-        x: 517,
-        y: 312,
-        w: 439,
-        h: 156
-      },
-      wrong2: {
-        x: 36,
-        y: 526,
-        w: 439,
-        h: 156
-      },
-      wrong3: {
-        x: 517,
-        y: 526,
-        w: 439,
-        h: 156
+      /*
+       * Alte Vorlage: schwarze Quadrate, oben links mit weißem
+       * Dreieck. Die Punkte sind die Mittelpunkte der Quadrate.
+       */
+      classic: {
+        markers: {
+          topLeft: {
+            x: 60.5,
+            y: 55
+          },
+          topRight: {
+            x: 937.5,
+            y: 55
+          },
+          bottomRight: {
+            x: 936.25,
+            y: 730.75
+          },
+          bottomLeft: {
+            x: 59.5,
+            y: 730.75
+          }
+        },
+        fields: {
+          question: {
+            x: 39,
+            y: 103,
+            w: 920,
+            h: 156
+          },
+          correct: {
+            x: 36,
+            y: 312,
+            w: 439,
+            h: 156
+          },
+          wrong1: {
+            x: 517,
+            y: 312,
+            w: 439,
+            h: 156
+          },
+          wrong2: {
+            x: 36,
+            y: 526,
+            w: 439,
+            h: 156
+          },
+          wrong3: {
+            x: 517,
+            y: 526,
+            w: 439,
+            h: 156
+          }
+        }
       }
     };
 
@@ -864,13 +936,113 @@
     }
 
     /*
-     * Erkennt die vier schwarzen Eckmarken und wertet zusätzlich
-     * den Innenbereich jeder Marke aus.
+     * Sucht zuerst die ArUco-Marken der neuen Vorlage. Werden sie
+     * nicht gefunden, folgt die Erkennung der alten Vorlage, damit
+     * bereits gedruckte Karten weiter funktionieren.
      */
     function autoDetectMarkers() {
       if (!cvReady || !loadedImage) {
         return false;
       }
+
+      if (detectArucoMarkers()) {
+        activeLayout = LAYOUTS.aruco;
+        return true;
+      }
+
+      if (detectClassicMarkers()) {
+        activeLayout = LAYOUTS.classic;
+        return true;
+      }
+
+      activeLayout = null;
+      return false;
+    }
+
+    function detectArucoMarkers() {
+      let src = null;
+      let gray = null;
+      let dictionary = null;
+      let parameters = null;
+      let refineParameters = null;
+      let detector = null;
+      let corners = null;
+      let ids = null;
+      let rejected = null;
+
+      try {
+        src = cv.imread(sourceCanvas);
+        gray = new cv.Mat();
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+        dictionary = cv.getPredefinedDictionary(cv.DICT_4X4_50);
+        parameters = new cv.aruco_DetectorParameters();
+        refineParameters = new cv.aruco_RefineParameters(10, 3, true);
+        detector = new cv.aruco_ArucoDetector(
+          dictionary,
+          parameters,
+          refineParameters
+        );
+
+        corners = new cv.MatVector();
+        ids = new cv.Mat();
+        rejected = new cv.MatVector();
+
+        detector.detectMarkers(gray, corners, ids, rejected);
+
+        /*
+         * Marke n liefert ihre Ecken in der Reihenfolge oben links,
+         * oben rechts, unten rechts, unten links. Ecke n ist damit
+         * genau die Ecke, die zur Kartenecke zeigt.
+         */
+        const found = [];
+
+        for (let i = 0; i < corners.size(); i++) {
+          const id = ids.data32S[i];
+
+          if (id < 0 || id > 3 || found[id]) {
+            continue;
+          }
+
+          const data = corners.get(i).data32F;
+
+          found[id] = {
+            x: data[id * 2],
+            y: data[id * 2 + 1]
+          };
+        }
+
+        if (![0, 1, 2, 3].every(id => found[id])) {
+          return false;
+        }
+
+        markerPoints = found;
+        return true;
+      } catch (error) {
+        console.error(error);
+        return false;
+      } finally {
+        [
+          src,
+          gray,
+          dictionary,
+          parameters,
+          refineParameters,
+          detector,
+          corners,
+          ids,
+          rejected
+        ].forEach(item => {
+          if (item) item.delete();
+        });
+      }
+    }
+
+    /*
+     * Erkennt die vier schwarzen Eckmarken der alten Vorlage und
+     * wertet zusätzlich den Innenbereich jeder Marke aus.
+     */
+    function detectClassicMarkers() {
 
       let src = null;
       let gray = null;
@@ -1065,7 +1237,7 @@
 
     /*
      * Ordnet die vier Punkte relativ zur erkannten Dreiecksecke.
-     * Die Dreiecksecke wird dadurch immer zu TARGET_MARKERS.topLeft.
+     * Die Dreiecksecke wird dadurch immer zu markers.topLeft.
      */
     function orderPointsFromTriangle(points, trianglePoint) {
       /*
@@ -1121,17 +1293,17 @@
         ]);
 
         dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-          TARGET_MARKERS.topLeft.x,
-          TARGET_MARKERS.topLeft.y,
+          activeLayout.markers.topLeft.x,
+          activeLayout.markers.topLeft.y,
 
-          TARGET_MARKERS.topRight.x,
-          TARGET_MARKERS.topRight.y,
+          activeLayout.markers.topRight.x,
+          activeLayout.markers.topRight.y,
 
-          TARGET_MARKERS.bottomRight.x,
-          TARGET_MARKERS.bottomRight.y,
+          activeLayout.markers.bottomRight.x,
+          activeLayout.markers.bottomRight.y,
 
-          TARGET_MARKERS.bottomLeft.x,
-          TARGET_MARKERS.bottomLeft.y
+          activeLayout.markers.bottomLeft.x,
+          activeLayout.markers.bottomLeft.y
         ]);
 
         matrix = cv.getPerspectiveTransform(
@@ -1155,11 +1327,11 @@
         cv.imshow(rectifiedCanvas, dst);
 
         return {
-          question: cropField(CROP_FIELDS.question),
-          correct: cropField(CROP_FIELDS.correct),
-          wrong1: cropField(CROP_FIELDS.wrong1),
-          wrong2: cropField(CROP_FIELDS.wrong2),
-          wrong3: cropField(CROP_FIELDS.wrong3)
+          question: cropField(activeLayout.fields.question),
+          correct: cropField(activeLayout.fields.correct),
+          wrong1: cropField(activeLayout.fields.wrong1),
+          wrong2: cropField(activeLayout.fields.wrong2),
+          wrong3: cropField(activeLayout.fields.wrong3)
         };
       } finally {
         if (src) src.delete();
