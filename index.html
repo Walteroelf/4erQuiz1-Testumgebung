@@ -20,17 +20,41 @@
   >
   <title>4er-Quiz automatisch</title>
 
+  <!--
+    70er-Schriften. Ohne Internet greifen die Ersatzschriften in
+    font-family, die App funktioniert trotzdem.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Righteous&family=Shrikhand&display=swap"
+  >
+
   <style>
+    /*
+     * 70er-Palette: Weinrot, Orange, Bernstein und Creme.
+     * Avocado-Grün (auch typisch 70er) nur für "richtig".
+     */
     :root {
-      --cream: #fff1c7;
-      --sun: #f6c85f;
-      --orange: #e77b3c;
-      --red: #b6422b;
-      --brown: #3f2415;
-      --dark-brown: #27150c;
-      --green: #6f8f3d;
-      --danger: #b7352a;
-      --shadow: #2a160d;
+      --cream: #fff6d8;
+      --sun: #ffa711;
+      --sun-light: #ffc95c;
+      --orange: #f44d00;
+      --red: #f44d00;
+      --maroon: #520411;
+      --brown: #520411;
+      --dark-brown: #520411;
+      --shadow: #33020a;
+      --green: #6b7716;
+      --green-light: #e6e4b0;
+      --danger: #520411;
+
+      --font-display: "Shrikhand", "Cooper Black", Georgia, serif;
+      --font-ui: "Righteous", "Arial Rounded MT Bold", Arial, sans-serif;
+
+      --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='0' cy='0' r='100' fill='%23520411'/%3E%3Ccircle cx='0' cy='0' r='86' fill='%23f44d00'/%3E%3Ccircle cx='0' cy='0' r='68' fill='%23ffa711'/%3E%3Ccircle cx='0' cy='0' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='200' cy='0' r='100' fill='%23520411'/%3E%3Ccircle cx='200' cy='0' r='86' fill='%23f44d00'/%3E%3Ccircle cx='200' cy='0' r='68' fill='%23ffa711'/%3E%3Ccircle cx='200' cy='0' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='100' cy='100' r='100' fill='%23520411'/%3E%3Ccircle cx='100' cy='100' r='86' fill='%23f44d00'/%3E%3Ccircle cx='100' cy='100' r='68' fill='%23ffa711'/%3E%3Ccircle cx='100' cy='100' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='0' cy='200' r='100' fill='%23520411'/%3E%3Ccircle cx='0' cy='200' r='86' fill='%23f44d00'/%3E%3Ccircle cx='0' cy='200' r='68' fill='%23ffa711'/%3E%3Ccircle cx='0' cy='200' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='200' cy='200' r='100' fill='%23520411'/%3E%3Ccircle cx='200' cy='200' r='86' fill='%23f44d00'/%3E%3Ccircle cx='200' cy='200' r='68' fill='%23ffa711'/%3E%3Ccircle cx='200' cy='200' r='44' fill='%23fff6d8'/%3E%3C/svg%3E");
+      --pattern-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='0' cy='0' r='100' fill='%233d030d'/%3E%3Ccircle cx='0' cy='0' r='86' fill='%235e0816'/%3E%3Ccircle cx='0' cy='0' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='0' cy='0' r='44' fill='%237d1420'/%3E%3Ccircle cx='200' cy='0' r='100' fill='%233d030d'/%3E%3Ccircle cx='200' cy='0' r='86' fill='%235e0816'/%3E%3Ccircle cx='200' cy='0' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='200' cy='0' r='44' fill='%237d1420'/%3E%3Ccircle cx='100' cy='100' r='100' fill='%233d030d'/%3E%3Ccircle cx='100' cy='100' r='86' fill='%235e0816'/%3E%3Ccircle cx='100' cy='100' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='100' cy='100' r='44' fill='%237d1420'/%3E%3Ccircle cx='0' cy='200' r='100' fill='%233d030d'/%3E%3Ccircle cx='0' cy='200' r='86' fill='%235e0816'/%3E%3Ccircle cx='0' cy='200' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='0' cy='200' r='44' fill='%237d1420'/%3E%3Ccircle cx='200' cy='200' r='100' fill='%233d030d'/%3E%3Ccircle cx='200' cy='200' r='86' fill='%235e0816'/%3E%3Ccircle cx='200' cy='200' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='200' cy='200' r='44' fill='%237d1420'/%3E%3C/svg%3E");
     }
 
     * {
@@ -40,30 +64,48 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, sans-serif;
+      font-family: var(--font-ui);
       color: var(--brown);
-      background:
-        linear-gradient(135deg, #f6c85f, #e77b3c 50%, #b6422b);
+      background-color: var(--sun);
+      background-image: var(--pattern);
+      background-size: 160px 160px;
     }
 
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    /*
+     * Kopfzeile mit drei Streifen darunter, wie auf 70er-Plakaten.
+     */
     header {
-      padding: 28px 18px;
+      padding: max(24px, env(safe-area-inset-top)) 18px 22px;
       text-align: center;
       color: var(--cream);
-      background: linear-gradient(135deg, var(--brown), var(--red));
-      border-bottom: 8px solid var(--dark-brown);
+      background: var(--maroon);
+      border-bottom: 10px solid var(--sun);
+      box-shadow:
+        0 10px 0 var(--orange),
+        0 20px 0 var(--maroon);
     }
 
     header h1 {
       margin: 0;
-      font-size: clamp(2.5rem, 8vw, 5rem);
-      text-transform: uppercase;
-      text-shadow: 5px 5px 0 var(--shadow);
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 9vw, 5.2rem);
+      font-weight: normal;
+      line-height: 1.1;
+      color: var(--cream);
+      text-shadow:
+        3px 3px 0 var(--sun),
+        6px 6px 0 var(--orange),
+        9px 9px 0 var(--shadow);
     }
 
     main {
       max-width: 940px;
-      margin: 28px auto;
+      margin: 48px auto 28px;
       padding: 0 16px 44px;
     }
 
@@ -85,8 +127,10 @@
 
     h2 {
       margin-top: 0;
-      color: var(--red);
-      text-transform: uppercase;
+      font-family: var(--font-display);
+      font-weight: normal;
+      color: var(--orange);
+      text-shadow: 2px 2px 0 var(--maroon);
     }
 
     .photo-button {
@@ -96,10 +140,18 @@
       justify-content: center;
       border: 5px solid var(--dark-brown);
       border-radius: 30px;
-      background: linear-gradient(135deg, #f08a3c, var(--red));
+      background:
+        linear-gradient(
+          180deg,
+          var(--sun) 0 22%,
+          var(--orange) 22% 78%,
+          var(--maroon) 78%
+        );
       color: var(--cream);
+      font-family: var(--font-display);
       font-size: clamp(1.8rem, 6vw, 3.4rem);
-      font-weight: bold;
+      font-weight: normal;
+      text-shadow: 3px 3px 0 var(--maroon);
       text-align: center;
       cursor: pointer;
       box-shadow: 8px 8px 0 var(--shadow);
@@ -113,12 +165,19 @@
       border: 4px solid var(--dark-brown);
       border-radius: 999px;
       padding: 14px 20px;
-      font-size: 1rem;
-      font-weight: bold;
+      font-size: 1.05rem;
+      font-weight: normal;
+      letter-spacing: .02em;
       cursor: pointer;
       color: var(--cream);
-      background: linear-gradient(135deg, var(--orange), var(--red));
+      background: var(--orange);
+      text-shadow: 1px 1px 0 var(--maroon);
       box-shadow: 5px 5px 0 var(--shadow);
+    }
+
+    button:active:not(:disabled) {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px 0 var(--shadow);
     }
 
     button:disabled {
@@ -127,16 +186,18 @@
     }
 
     button.secondary {
-      color: var(--brown);
-      background: linear-gradient(135deg, #ffe083, var(--sun));
+      color: var(--maroon);
+      background: var(--sun);
+      text-shadow: none;
     }
 
     button.success {
-      background: linear-gradient(135deg, #91aa4f, var(--green));
+      background: var(--green);
     }
 
     button.danger {
-      background: linear-gradient(135deg, #d94a31, var(--danger));
+      background: var(--maroon);
+      border-color: var(--shadow);
     }
 
     .controls {
@@ -150,8 +211,7 @@
       padding: 16px;
       text-align: center;
       font-size: 1.3rem;
-      font-weight: bold;
-      background: #dfe8a5;
+      background: var(--sun-light);
       border: 4px solid var(--dark-brown);
       border-radius: 16px;
     }
@@ -181,7 +241,6 @@
       margin: 12px 0 0;
       padding: 0;
       list-style: none;
-      font-weight: bold;
     }
 
     .status-list li {
@@ -193,11 +252,11 @@
     }
 
     .status-list .ok {
-      background: #dfe8a5;
+      background: var(--green-light);
     }
 
     .status-list .warn {
-      background: #ffd98a;
+      background: var(--sun-light);
     }
 
     .status-list .error {
@@ -212,9 +271,7 @@
 
     .last-card-preview figcaption {
       margin-bottom: 6px;
-      color: var(--red);
-      font-weight: bold;
-      text-transform: uppercase;
+      color: var(--orange);
     }
 
     .last-card-preview img {
@@ -280,7 +337,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: rgba(39, 21, 12, .88);
+      background: rgba(51, 2, 10, .88);
     }
 
     .modal {
@@ -291,7 +348,10 @@
     .modal li,
     .modal p {
       line-height: 1.5;
-      font-weight: bold;
+    }
+
+    .modal a {
+      color: var(--orange);
     }
 
     .modal-ok {
@@ -318,7 +378,9 @@
         max(10px, env(safe-area-inset-bottom))
         max(12px, env(safe-area-inset-left));
       color: var(--cream);
-      background: linear-gradient(135deg, var(--brown), var(--red), var(--orange));
+      background-color: var(--maroon);
+      background-image: var(--pattern-dark);
+      background-size: 220px 220px;
     }
 
     .quiz-inner {
@@ -343,20 +405,27 @@
 
     .quiz-title {
       margin: 0;
-      font-size: clamp(1.3rem, 4.5vh, 2.2rem);
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 5vh, 2.4rem);
+      font-weight: normal;
       text-align: center;
-      color: var(--sun);
-      text-transform: uppercase;
-      text-shadow: 4px 4px 0 var(--shadow);
+      color: var(--cream);
+      text-shadow:
+        2px 2px 0 var(--sun),
+        4px 4px 0 var(--orange),
+        6px 6px 0 var(--shadow);
     }
 
     .quiz-progress {
       display: inline-block;
-      padding: 5px 10px;
+      vertical-align: middle;
+      padding: 4px 12px;
       border: 3px solid var(--cream);
       border-radius: 999px;
-      background: var(--red);
+      background: var(--orange);
+      font-family: var(--font-ui);
       font-size: .9rem;
+      text-shadow: none;
     }
 
     .quiz-top-actions {
@@ -368,8 +437,9 @@
       width: 50px;
       padding: 0;
       font-size: 1.5rem;
-      color: var(--brown);
+      color: var(--maroon);
       background: var(--sun);
+      text-shadow: none;
     }
 
     .quiz-question {
@@ -416,12 +486,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 4px solid var(--dark-brown);
+      /*
+       * Buchstabe in Ringen wie im 70er-Kreismuster. Der Abstand
+       * hält die äußeren Ringe innerhalb des Antwortkastens.
+       */
+      margin: 0 6px 0 8px;
+      border: 4px solid var(--sun);
       border-radius: 50%;
-      background: var(--red);
+      background: var(--orange);
+      box-shadow: 0 0 0 5px var(--maroon);
       color: var(--cream);
+      font-family: var(--font-display);
       font-size: clamp(1.4rem, 4.5vh, 2.3rem);
-      font-weight: bold;
+      font-weight: normal;
+      line-height: 1;
+      text-shadow: 2px 2px 0 var(--maroon);
+    }
+
+    .quiz-answer.correct .big-letter {
+      background: var(--green);
     }
 
     .answer-image-wrap {
