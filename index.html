@@ -641,58 +641,64 @@
     let correctLetter = null;
     let isProcessing = false;
 
-    const NORMALIZED_WIDTH = 1021;
-    const NORMALIZED_HEIGHT = 724;
+    /*
+     * Alle Maße stammen aus der Quiz-Vorlage (2000 x 1563 Pixel)
+     * und sind hier halbiert. Die Eckmarken-Punkte sind die
+     * Mittelpunkte der schwarzen Quadrate, die Felder liegen
+     * knapp innerhalb der schwarzen Rahmen.
+     */
+    const NORMALIZED_WIDTH = 1000;
+    const NORMALIZED_HEIGHT = 782;
 
     const TARGET_MARKERS = {
       topLeft: {
-        x: 141,
-        y: 76
+        x: 60.5,
+        y: 55
       },
       topRight: {
-        x: 908,
-        y: 76
+        x: 937.5,
+        y: 55
       },
       bottomRight: {
-        x: 908,
-        y: 668
+        x: 936.25,
+        y: 730.75
       },
       bottomLeft: {
-        x: 141,
-        y: 668
+        x: 59.5,
+        y: 730.75
       }
     };
 
     const CROP_FIELDS = {
       question: {
-        x: 112,
-        y: 110,
-        w: 824,
-        h: 154
+        x: 39,
+        y: 103,
+        w: 920,
+        h: 156
       },
       correct: {
-        x: 111,
-        y: 293,
-        w: 402,
-        h: 153
+        x: 36,
+        y: 312,
+        w: 439,
+        h: 156
       },
       wrong1: {
-        x: 531,
-        y: 293,
-        w: 402,
-        h: 153
+        x: 517,
+        y: 312,
+        w: 439,
+        h: 156
       },
       wrong2: {
-        x: 111,
-        y: 481,
-        w: 402,
-        h: 153
+        x: 36,
+        y: 526,
+        w: 439,
+        h: 156
       },
       wrong3: {
-        x: 531,
-        y: 481,
-        w: 402,
-        h: 153
+        x: 517,
+        y: 526,
+        w: 439,
+        h: 156
       }
     };
 
@@ -893,7 +899,12 @@
           binary,
           contours,
           hierarchy,
-          cv.RETR_EXTERNAL,
+          /*
+           * Alle Konturen, nicht nur die äußeren: Liegt die Karte
+           * auf einem dunklen Tisch, wäre sonst nur der Hintergrund
+           * eine äußere Kontur und die Eckmarken lägen darin.
+           */
+          cv.RETR_LIST,
           cv.CHAIN_APPROX_SIMPLE
         );
 
@@ -960,22 +971,25 @@
         const triangleCandidate = triangleScores[0];
 
         /*
-         * Der Wert kann bei sehr schlechten Fotos kleiner sein.
-         * In diesem Fall wird die Erkennung trotzdem versucht, wenn
-         * der beste Kandidat deutlich besser als die anderen ist.
+         * Nur die Marke oben links hat ein weißes Dreieck. Ist
+         * keine Marke deutlich heller als die anderen, wird das
+         * Foto lieber als nicht erkannt gemeldet als falsch
+         * gedreht übernommen.
          */
         const secondScore =
           triangleScores[1]?.score || 0;
 
         const triangleIsReliable =
-          triangleCandidate.score >= 0.08 &&
-          triangleCandidate.score > secondScore * 1.15;
+          triangleCandidate.score >= 0.04 &&
+          triangleCandidate.score > secondScore * 2;
 
         if (!triangleIsReliable) {
           console.warn(
             "Dreieck nicht eindeutig erkannt.",
             triangleScores
           );
+          markerPoints = null;
+          return false;
         }
 
         markerPoints = orderPointsFromTriangle(
@@ -998,11 +1012,8 @@
     }
 
     /*
-     * Prüft den inneren Bereich einer quadratischen Marke.
-     *
-     * Der Dreiecksmarker enthält typischerweise eine diagonale
-     * schwarze Struktur. Deshalb wird gezählt, wie viele dunkle
-     * Pixel in den drei Dreiecksbereichen liegen.
+     * Prüft den inneren Bereich einer quadratischen Marke und
+     * liefert den Anteil heller Pixel (das weiße Dreieck).
      */
     function detectTriangleScore(binary, candidate) {
       const r = candidate.rect;
@@ -1031,43 +1042,22 @@
       view.delete();
 
       try {
+        /*
+         * Im invertierten Binärbild ist Schwarz 255 und Weiß 0.
+         * Die Eckmarken sind volle schwarze Quadrate, nur die
+         * Marke oben links enthält ein weißes Dreieck. Deshalb
+         * zählt hier der Anteil heller Pixel im Inneren.
+         */
         const data = roi.data;
-        let totalDark = 0;
-        let diagonalDark = 0;
+        let light = 0;
 
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const value = data[y * roi.cols + x];
-
-            if (value > 0) {
-              totalDark++;
-
-              const normalizedX = x / w;
-              const normalizedY = y / h;
-
-              const distance =
-                Math.abs(normalizedX - normalizedY);
-
-              /*
-               * Bereich um eine Diagonale sowie die beiden
-               * angrenzenden Dreiecksflächen.
-               */
-              if (
-                distance < 0.22 ||
-                normalizedX + normalizedY < 0.72 ||
-                normalizedX + normalizedY > 1.28
-              ) {
-                diagonalDark++;
-              }
-            }
+        for (let i = 0; i < w * h; i++) {
+          if (data[i] === 0) {
+            light++;
           }
         }
 
-        if (totalDark === 0) {
-          return 0;
-        }
-
-        return diagonalDark / (w * h);
+        return light / (w * h);
       } finally {
         roi.delete();
       }
