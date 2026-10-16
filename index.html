@@ -552,7 +552,6 @@
   <div class="hidden-work-area">
     <canvas id="sourceCanvas"></canvas>
     <canvas id="rectifiedCanvas"></canvas>
-    <canvas id="originalCanvas"></canvas>
 
     <img id="questionPreview" alt="">
     <img id="correctPreview" alt="">
@@ -603,9 +602,6 @@
 
     const rectifiedCanvas = document.getElementById("rectifiedCanvas");
     const rectifiedCtx = rectifiedCanvas.getContext("2d");
-
-    const originalCanvas = document.getElementById("originalCanvas");
-    const originalCtx = originalCanvas.getContext("2d");
 
     const questionPreview = document.getElementById("questionPreview");
     const correctPreview = document.getElementById("correctPreview");
@@ -840,9 +836,6 @@
       sourceCanvas.width = Math.round(loadedImage.width * scale);
       sourceCanvas.height = Math.round(loadedImage.height * scale);
 
-      originalCanvas.width = loadedImage.width;
-      originalCanvas.height = loadedImage.height;
-
       rectifiedCanvas.width = NORMALIZED_WIDTH;
       rectifiedCanvas.height = NORMALIZED_HEIGHT;
     }
@@ -861,21 +854,6 @@
         0,
         sourceCanvas.width,
         sourceCanvas.height
-      );
-
-      originalCtx.clearRect(
-        0,
-        0,
-        originalCanvas.width,
-        originalCanvas.height
-      );
-
-      originalCtx.drawImage(
-        loadedImage,
-        0,
-        0,
-        originalCanvas.width,
-        originalCanvas.height
       );
     }
 
@@ -1041,9 +1019,16 @@
         return 0;
       }
 
-      const roi = binary.roi(
+      /*
+       * Ein ROI ist nur ein Ausschnitt des großen Bildes.
+       * Erst die Kopie liegt Zeile für Zeile lückenlos im
+       * Speicher, sodass y * cols + x stimmt.
+       */
+      const view = binary.roi(
         new cv.Rect(x0, y0, w, h)
       );
+      const roi = view.clone();
+      view.delete();
 
       try {
         const data = roi.data;
@@ -1093,32 +1078,27 @@
      * Die Dreiecksecke wird dadurch immer zu TARGET_MARKERS.topLeft.
      */
     function orderPointsFromTriangle(points, trianglePoint) {
-      const remaining = points.filter(
-        point => point !== trianglePoint
+      /*
+       * Die Punkte werden im Uhrzeigersinn um ihren Mittelpunkt
+       * sortiert. Danach beginnt die Reihe bei der Dreiecksecke.
+       * So bleibt die Reihenfolge auch bei gedrehten Karten
+       * eindeutig.
+       */
+      const centerX =
+        points.reduce((sum, point) => sum + point.x, 0) / 4;
+      const centerY =
+        points.reduce((sum, point) => sum + point.y, 0) / 4;
+
+      const clockwise = [...points].sort((a, b) =>
+        Math.atan2(a.y - centerY, a.x - centerX) -
+        Math.atan2(b.y - centerY, b.x - centerX)
       );
 
-      const topRight = remaining.reduce((best, point) => {
-        return point.x > best.x ? point : best;
-      });
+      const start = clockwise.indexOf(trianglePoint);
 
-      const bottomRight = remaining.reduce((best, point) => {
-        return point.x + point.y > best.x + best.y
-          ? point
-          : best;
-      });
-
-      const bottomLeft = remaining.find(
-        point =>
-          point !== topRight &&
-          point !== bottomRight
+      return [0, 1, 2, 3].map(
+        offset => clockwise[(start + offset) % 4]
       );
-
-      return [
-        trianglePoint,
-        topRight,
-        bottomRight,
-        bottomLeft
-      ];
     }
 
     function rectifyAndCrop() {
@@ -1219,7 +1199,16 @@
         field.h
       );
 
-      return canvas.toDataURL("image/png");
+      const dataUrl = canvas.toDataURL("image/png");
+
+      /*
+       * Safari auf dem iPhone gibt Canvas-Speicher nur frei,
+       * wenn die Größe auf 0 gesetzt wird.
+       */
+      canvas.width = 0;
+      canvas.height = 0;
+
+      return dataUrl;
     }
 
     function showLatestCrops(crops) {
