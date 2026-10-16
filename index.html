@@ -21,40 +21,49 @@
   <title>4er-Quiz automatisch</title>
 
   <!--
-    70er-Schriften. Ohne Internet greifen die Ersatzschriften in
-    font-family, die App funktioniert trotzdem.
+    Atkinson Hyperlegible: Schrift mit besonders gut unterscheidbaren
+    Buchstaben. Ohne Internet greift die Systemschrift.
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Righteous&family=Shrikhand&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"
   >
 
   <style>
     /*
-     * 70er-Palette: Weinrot, Orange, Bernstein und Creme.
-     * Avocado-Grün (auch typisch 70er) nur für "richtig".
+     * Ruhiges Design für die digitale Tafel und für Schülerinnen
+     * und Schüler, die schnell reizüberflutet sind:
+     * - wenige Farben, klare Kontraste (Text mindestens 7:1)
+     * - keine Muster, Verläufe, Schatten oder Bewegungen
+     * - gebrochenes Weiß statt Reinweiß, das blendet weniger
+     * - "richtig" wird nicht nur farbig, sondern auch mit Zeichen
+     *   und Text angezeigt
      */
     :root {
-      --cream: #fff6d8;
-      --sun: #ffa711;
-      --sun-light: #ffc95c;
-      --orange: #f44d00;
-      --red: #f44d00;
-      --maroon: #520411;
-      --brown: #520411;
-      --dark-brown: #520411;
-      --shadow: #33020a;
-      --green: #6b7716;
-      --green-light: #e6e4b0;
-      --danger: #520411;
+      --bg: #f4f3ef;
+      --surface: #ffffff;
+      --text: #1b1b1b;
+      --muted: #555555;
+      --line: #1b1b1b;
+      --line-soft: #c8c5bc;
 
-      --font-display: "Shrikhand", "Cooper Black", Georgia, serif;
-      --font-ui: "Righteous", "Arial Rounded MT Bold", Arial, sans-serif;
+      --accent: #1f4e8c;
+      --accent-soft: #e4ebf5;
 
-      --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='0' cy='0' r='100' fill='%23520411'/%3E%3Ccircle cx='0' cy='0' r='86' fill='%23f44d00'/%3E%3Ccircle cx='0' cy='0' r='68' fill='%23ffa711'/%3E%3Ccircle cx='0' cy='0' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='200' cy='0' r='100' fill='%23520411'/%3E%3Ccircle cx='200' cy='0' r='86' fill='%23f44d00'/%3E%3Ccircle cx='200' cy='0' r='68' fill='%23ffa711'/%3E%3Ccircle cx='200' cy='0' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='100' cy='100' r='100' fill='%23520411'/%3E%3Ccircle cx='100' cy='100' r='86' fill='%23f44d00'/%3E%3Ccircle cx='100' cy='100' r='68' fill='%23ffa711'/%3E%3Ccircle cx='100' cy='100' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='0' cy='200' r='100' fill='%23520411'/%3E%3Ccircle cx='0' cy='200' r='86' fill='%23f44d00'/%3E%3Ccircle cx='0' cy='200' r='68' fill='%23ffa711'/%3E%3Ccircle cx='0' cy='200' r='44' fill='%23fff6d8'/%3E%3Ccircle cx='200' cy='200' r='100' fill='%23520411'/%3E%3Ccircle cx='200' cy='200' r='86' fill='%23f44d00'/%3E%3Ccircle cx='200' cy='200' r='68' fill='%23ffa711'/%3E%3Ccircle cx='200' cy='200' r='44' fill='%23fff6d8'/%3E%3C/svg%3E");
-      --pattern-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='0' cy='0' r='100' fill='%233d030d'/%3E%3Ccircle cx='0' cy='0' r='86' fill='%235e0816'/%3E%3Ccircle cx='0' cy='0' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='0' cy='0' r='44' fill='%237d1420'/%3E%3Ccircle cx='200' cy='0' r='100' fill='%233d030d'/%3E%3Ccircle cx='200' cy='0' r='86' fill='%235e0816'/%3E%3Ccircle cx='200' cy='0' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='200' cy='0' r='44' fill='%237d1420'/%3E%3Ccircle cx='100' cy='100' r='100' fill='%233d030d'/%3E%3Ccircle cx='100' cy='100' r='86' fill='%235e0816'/%3E%3Ccircle cx='100' cy='100' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='100' cy='100' r='44' fill='%237d1420'/%3E%3Ccircle cx='0' cy='200' r='100' fill='%233d030d'/%3E%3Ccircle cx='0' cy='200' r='86' fill='%235e0816'/%3E%3Ccircle cx='0' cy='200' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='0' cy='200' r='44' fill='%237d1420'/%3E%3Ccircle cx='200' cy='200' r='100' fill='%233d030d'/%3E%3Ccircle cx='200' cy='200' r='86' fill='%235e0816'/%3E%3Ccircle cx='200' cy='200' r='68' fill='%236e0c1a'/%3E%3Ccircle cx='200' cy='200' r='44' fill='%237d1420'/%3E%3C/svg%3E");
+      --correct: #1e6b3a;
+      --correct-soft: #e3f0e7;
+
+      --warn-text: #6b4a00;
+      --warn-soft: #fbefcf;
+
+      --error: #9b1c1c;
+      --error-soft: #f8e3e3;
+
+      --radius: 12px;
+      --font: "Atkinson Hyperlegible", system-ui, -apple-system,
+        "Segoe UI", Arial, sans-serif;
     }
 
     * {
@@ -64,11 +73,11 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: var(--font-ui);
-      color: var(--brown);
-      background-color: var(--sun);
-      background-image: var(--pattern);
-      background-size: 160px 160px;
+      font-family: var(--font);
+      font-size: 1.1rem;
+      line-height: 1.45;
+      color: var(--text);
+      background: var(--bg);
     }
 
     button,
@@ -76,36 +85,22 @@
       font-family: inherit;
     }
 
-    /*
-     * Kopfzeile mit drei Streifen darunter, wie auf 70er-Plakaten.
-     */
     header {
-      padding: max(24px, env(safe-area-inset-top)) 18px 22px;
+      padding: max(18px, env(safe-area-inset-top)) 18px 18px;
       text-align: center;
-      color: var(--cream);
-      background: var(--maroon);
-      border-bottom: 10px solid var(--sun);
-      box-shadow:
-        0 10px 0 var(--orange),
-        0 20px 0 var(--maroon);
+      background: var(--surface);
+      border-bottom: 3px solid var(--line);
     }
 
     header h1 {
       margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(2.6rem, 9vw, 5.2rem);
-      font-weight: normal;
-      line-height: 1.1;
-      color: var(--cream);
-      text-shadow:
-        3px 3px 0 var(--sun),
-        6px 6px 0 var(--orange),
-        9px 9px 0 var(--shadow);
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 700;
     }
 
     main {
       max-width: 940px;
-      margin: 48px auto 28px;
+      margin: 28px auto;
       padding: 0 16px 44px;
     }
 
@@ -114,10 +109,9 @@
     .quiz-question,
     .quiz-answer,
     .question-list-item {
-      background: var(--cream);
-      border: 5px solid var(--dark-brown);
-      border-radius: 24px;
-      box-shadow: 9px 9px 0 var(--shadow);
+      background: var(--surface);
+      border: 3px solid var(--line);
+      border-radius: var(--radius);
     }
 
     .card {
@@ -127,34 +121,23 @@
 
     h2 {
       margin-top: 0;
-      font-family: var(--font-display);
-      font-weight: normal;
-      color: var(--orange);
-      text-shadow: 2px 2px 0 var(--maroon);
+      font-size: 1.5rem;
     }
 
     .photo-button {
-      min-height: 140px;
+      min-height: 120px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 5px solid var(--dark-brown);
-      border-radius: 30px;
-      background:
-        linear-gradient(
-          180deg,
-          var(--sun) 0 22%,
-          var(--orange) 22% 78%,
-          var(--maroon) 78%
-        );
-      color: var(--cream);
-      font-family: var(--font-display);
-      font-size: clamp(1.8rem, 6vw, 3.4rem);
-      font-weight: normal;
-      text-shadow: 3px 3px 0 var(--maroon);
+      gap: 14px;
+      border: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #ffffff;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 700;
       text-align: center;
       cursor: pointer;
-      box-shadow: 8px 8px 0 var(--shadow);
     }
 
     input[type="file"] {
@@ -162,42 +145,43 @@
     }
 
     button {
-      border: 4px solid var(--dark-brown);
-      border-radius: 999px;
-      padding: 14px 20px;
-      font-size: 1.05rem;
-      font-weight: normal;
-      letter-spacing: .02em;
+      min-height: 48px;
+      border: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
       cursor: pointer;
-      color: var(--cream);
-      background: var(--orange);
-      text-shadow: 1px 1px 0 var(--maroon);
-      box-shadow: 5px 5px 0 var(--shadow);
-    }
-
-    button:active:not(:disabled) {
-      transform: translate(3px, 3px);
-      box-shadow: 2px 2px 0 var(--shadow);
+      color: #ffffff;
+      background: var(--accent);
     }
 
     button:disabled {
-      opacity: .45;
+      opacity: .4;
       cursor: not-allowed;
     }
 
+    button:focus-visible,
+    .photo-button:focus-within {
+      outline: 4px solid var(--text);
+      outline-offset: 3px;
+    }
+
     button.secondary {
-      color: var(--maroon);
-      background: var(--sun);
-      text-shadow: none;
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--line);
     }
 
     button.success {
-      background: var(--green);
+      background: var(--correct);
+      border-color: var(--correct);
     }
 
     button.danger {
-      background: var(--maroon);
-      border-color: var(--shadow);
+      color: var(--error);
+      background: var(--surface);
+      border-color: var(--error);
     }
 
     .controls {
@@ -208,33 +192,29 @@
 
     .question-counter-box {
       margin-top: 16px;
-      padding: 16px;
+      padding: 14px;
       text-align: center;
       font-size: 1.3rem;
-      background: var(--sun-light);
-      border: 4px solid var(--dark-brown);
-      border-radius: 16px;
+      font-weight: 700;
+      background: var(--bg);
+      border: 2px solid var(--line-soft);
+      border-radius: var(--radius);
     }
 
     .progress-outer {
       display: none;
-      height: 22px;
+      height: 16px;
       margin-top: 16px;
       overflow: hidden;
-      background: var(--brown);
-      border: 4px solid var(--dark-brown);
+      background: var(--accent-soft);
+      border: 2px solid var(--accent);
       border-radius: 999px;
     }
 
     .progress-inner {
       width: 0;
       height: 100%;
-      background: repeating-linear-gradient(
-        45deg,
-        var(--sun) 0 14px,
-        var(--orange) 14px 28px
-      );
-      transition: width .25s;
+      background: var(--accent);
     }
 
     .status-list {
@@ -245,23 +225,24 @@
 
     .status-list li {
       margin-top: 6px;
-      padding: 8px 12px;
-      border: 3px solid var(--dark-brown);
-      border-radius: 12px;
-      line-height: 1.35;
+      padding: 10px 14px;
+      border: 2px solid;
+      border-radius: var(--radius);
     }
 
     .status-list .ok {
-      background: var(--green-light);
+      color: var(--correct);
+      background: var(--correct-soft);
     }
 
     .status-list .warn {
-      background: var(--sun-light);
+      color: var(--warn-text);
+      background: var(--warn-soft);
     }
 
     .status-list .error {
-      color: var(--cream);
-      background: var(--danger);
+      color: var(--error);
+      background: var(--error-soft);
     }
 
     .last-card-preview {
@@ -271,15 +252,15 @@
 
     .last-card-preview figcaption {
       margin-bottom: 6px;
-      color: var(--orange);
+      font-weight: 700;
     }
 
     .last-card-preview img {
       display: block;
       width: 100%;
-      background: white;
-      border: 4px solid var(--dark-brown);
-      border-radius: 12px;
+      background: #ffffff;
+      border: 2px solid var(--line-soft);
+      border-radius: var(--radius);
     }
 
     .question-list-section,
@@ -289,27 +270,27 @@
 
     .question-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
     }
 
     .question-list-item {
       padding: 12px;
-      border-radius: 16px;
+      border-width: 2px;
+      border-color: var(--line-soft);
     }
 
     .question-list-item strong {
       display: block;
       margin-bottom: 8px;
-      color: var(--red);
     }
 
     .question-list-item img {
       width: 100%;
       height: 90px;
       object-fit: contain;
-      background: white;
-      border: 3px solid var(--dark-brown);
+      background: #ffffff;
+      border: 2px solid var(--line-soft);
       border-radius: 8px;
     }
 
@@ -321,8 +302,9 @@
     }
 
     .question-actions button {
-      padding: 8px;
-      font-size: .75rem;
+      min-height: 40px;
+      padding: 6px;
+      font-size: .9rem;
     }
 
     .question-actions .delete-question-button {
@@ -337,21 +319,19 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: rgba(51, 2, 10, .88);
+      background: rgba(27, 27, 27, .6);
     }
 
     .modal {
       max-width: 760px;
+      max-height: 100%;
+      overflow: auto;
       padding: 28px;
     }
 
-    .modal li,
-    .modal p {
-      line-height: 1.5;
-    }
-
     .modal a {
-      color: var(--orange);
+      color: var(--accent);
+      font-weight: 700;
     }
 
     .modal-ok {
@@ -377,14 +357,11 @@
         max(12px, env(safe-area-inset-right))
         max(10px, env(safe-area-inset-bottom))
         max(12px, env(safe-area-inset-left));
-      color: var(--cream);
-      background-color: var(--maroon);
-      background-image: var(--pattern-dark);
-      background-size: 220px 220px;
+      background: var(--bg);
     }
 
     .quiz-inner {
-      max-width: 1200px;
+      max-width: 1400px;
       height: 100%;
       margin: 0 auto;
       display: grid;
@@ -393,7 +370,7 @@
         minmax(0, 1fr)
         minmax(0, 2fr)
         auto;
-      gap: clamp(6px, 1.4vh, 12px);
+      gap: clamp(8px, 1.6vh, 16px);
     }
 
     .quiz-topbar {
@@ -405,27 +382,18 @@
 
     .quiz-title {
       margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(1.4rem, 5vh, 2.4rem);
-      font-weight: normal;
-      text-align: center;
-      color: var(--cream);
-      text-shadow:
-        2px 2px 0 var(--sun),
-        4px 4px 0 var(--orange),
-        6px 6px 0 var(--shadow);
+      font-size: clamp(1.3rem, 4.5vh, 2rem);
+      font-weight: 700;
     }
 
     .quiz-progress {
       display: inline-block;
-      vertical-align: middle;
-      padding: 4px 12px;
-      border: 3px solid var(--cream);
+      margin-left: 10px;
+      padding: 2px 12px;
+      border: 2px solid var(--line);
       border-radius: 999px;
-      background: var(--orange);
-      font-family: var(--font-ui);
-      font-size: .9rem;
-      text-shadow: none;
+      font-size: .8em;
+      vertical-align: middle;
     }
 
     .quiz-top-actions {
@@ -434,12 +402,9 @@
     }
 
     .quiz-fullscreen-button {
-      width: 50px;
+      width: 52px;
       padding: 0;
       font-size: 1.5rem;
-      color: var(--maroon);
-      background: var(--sun);
-      text-shadow: none;
     }
 
     .quiz-question {
@@ -461,50 +426,31 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 10px;
+      gap: clamp(8px, 1.6vh, 16px);
     }
 
     .quiz-answer {
+      position: relative;
       min-height: 0;
-      padding: 9px;
+      padding: 8px;
       display: flex;
       align-items: stretch;
       gap: 10px;
       overflow: hidden;
     }
 
-    .quiz-answer.correct {
-      background: var(--green);
-      box-shadow: 9px 9px 0 var(--shadow), 0 0 0 7px var(--sun);
-    }
-
     .big-letter {
-      width: clamp(40px, 8vh, 64px);
-      height: clamp(40px, 8vh, 64px);
+      width: clamp(44px, 9vh, 72px);
       flex: 0 0 auto;
-      align-self: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      /*
-       * Buchstabe in Ringen wie im 70er-Kreismuster. Der Abstand
-       * hält die äußeren Ringe innerhalb des Antwortkastens.
-       */
-      margin: 0 6px 0 8px;
-      border: 4px solid var(--sun);
-      border-radius: 50%;
-      background: var(--orange);
-      box-shadow: 0 0 0 5px var(--maroon);
-      color: var(--cream);
-      font-family: var(--font-display);
-      font-size: clamp(1.4rem, 4.5vh, 2.3rem);
-      font-weight: normal;
+      border-radius: 8px;
+      background: var(--text);
+      color: #ffffff;
+      font-size: clamp(1.6rem, 5.5vh, 2.6rem);
+      font-weight: 700;
       line-height: 1;
-      text-shadow: 2px 2px 0 var(--maroon);
-    }
-
-    .quiz-answer.correct .big-letter {
-      background: var(--green);
     }
 
     .answer-image-wrap {
@@ -514,9 +460,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      background: white;
-      border: 3px solid var(--dark-brown);
-      border-radius: 12px;
+      background: #ffffff;
     }
 
     /*
@@ -528,17 +472,54 @@
       object-fit: contain;
     }
 
+    /*
+     * Auflösung: Die richtige Antwort bekommt einen dicken grünen
+     * Rahmen, ein Häkchen statt des Buchstabens und das Wort
+     * "Richtig". Die anderen Antworten treten zurück.
+     */
+    .quiz-answers.revealed .quiz-answer:not(.correct) {
+      opacity: .35;
+    }
+
+    .quiz-answer.correct {
+      border: 6px solid var(--correct);
+      background: var(--correct-soft);
+    }
+
+    .quiz-answer.correct .big-letter {
+      background: var(--correct);
+      font-size: 0;
+    }
+
+    .quiz-answer.correct .big-letter::after {
+      content: "✓";
+      font-size: clamp(1.8rem, 6vh, 3rem);
+    }
+
+    .quiz-answer.correct::after {
+      content: "Richtig";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 2px 12px;
+      border-radius: 999px;
+      background: var(--correct);
+      color: #ffffff;
+      font-size: clamp(.9rem, 2.4vh, 1.2rem);
+      font-weight: 700;
+    }
+
     .quiz-controls {
       display: grid;
       grid-template-columns: repeat(3, auto);
       justify-content: center;
-      gap: 9px;
+      gap: 12px;
     }
 
     .quiz-controls button,
     .quiz-top-actions button {
-      padding: clamp(8px, 1.6vh, 14px) clamp(14px, 2vw, 22px);
-      font-size: clamp(.9rem, 2.2vh, 1.1rem);
+      padding: clamp(6px, 1.4vh, 12px) clamp(14px, 2vw, 24px);
+      font-size: clamp(1rem, 2.4vh, 1.25rem);
     }
 
     .quiz-top-actions .quiz-fullscreen-button {
@@ -580,11 +561,12 @@
 
       .quiz-controls {
         grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
       }
 
       .quiz-controls button {
-        padding: 8px 6px;
-        font-size: .85rem;
+        padding: 6px;
+        font-size: .9rem;
       }
     }
   </style>
@@ -835,6 +817,7 @@
     const answerBoxB = document.getElementById("answerBoxB");
     const answerBoxC = document.getElementById("answerBoxC");
     const answerBoxD = document.getElementById("answerBoxD");
+    const quizAnswers = document.querySelector(".quiz-answers");
 
     const revealButton = document.getElementById("revealButton");
     const backButton = document.getElementById("backButton");
@@ -1963,7 +1946,7 @@
     }
 
     /*
-     * Zeigt die entzerrte Karte verkleinert mit grünen Rahmen um
+     * Zeigt die entzerrte Karte verkleinert mit blauen Rahmen um
      * die ausgeschnittenen Felder.
      */
     function showCardPreview() {
@@ -1982,7 +1965,7 @@
         canvas.height
       );
 
-      ctx.strokeStyle = "#3f9b2f";
+      ctx.strokeStyle = "#1f4e8c";
       ctx.lineWidth = 4;
 
       Object.values(activeLayout.fields).forEach(field => {
@@ -2181,6 +2164,7 @@
       document
         .getElementById("answerBox" + correctLetter)
         .classList.add("correct");
+      quizAnswers.classList.add("revealed");
     }
 
     function removeCorrectHighlight() {
@@ -2190,6 +2174,7 @@
         answerBoxC,
         answerBoxD
       ].forEach(box => box.classList.remove("correct"));
+      quizAnswers.classList.remove("revealed");
     }
 
     function showPreviousQuestion() {
