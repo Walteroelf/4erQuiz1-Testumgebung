@@ -307,8 +307,70 @@
       font-size: .9rem;
     }
 
-    .question-actions .delete-question-button {
+    .question-actions .delete-question-button,
+    .question-actions .view-question-button {
       grid-column: 1 / -1;
+    }
+
+    .question-thumb {
+      cursor: pointer;
+    }
+
+    .modal-backdrop[hidden],
+    .quiz-end[hidden] {
+      display: none;
+    }
+
+    /*
+     * Großansicht einer Frage: alle fünf Felder untereinander bzw.
+     * die Antworten im 2x2-Raster, die richtige grün markiert.
+     */
+    .detail-modal {
+      width: min(1100px, 100%);
+      max-width: none;
+    }
+
+    .detail-field {
+      margin: 0 0 14px;
+      padding: 10px;
+      border: 2px solid var(--line-soft);
+      border-radius: var(--radius);
+    }
+
+    .detail-field figcaption {
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .detail-field img {
+      display: block;
+      width: 100%;
+      background: #ffffff;
+    }
+
+    .detail-answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .detail-answers .detail-field {
+      margin: 0;
+    }
+
+    .detail-correct {
+      border: 4px solid var(--correct);
+      background: var(--correct-soft);
+    }
+
+    .detail-correct figcaption {
+      color: var(--correct);
+    }
+
+    @media (max-width: 700px) {
+      .detail-answers {
+        grid-template-columns: 1fr;
+      }
     }
 
     .modal-backdrop {
@@ -532,6 +594,46 @@
     }
 
     /*
+     * Abschluss nach der letzten Frage: schlicht und mittig, nur
+     * zwei klare Möglichkeiten.
+     */
+    .quiz-end {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px;
+      text-align: center;
+      background: var(--bg);
+    }
+
+    .quiz-end-title {
+      margin: 0;
+      font-size: clamp(2.4rem, 10vh, 4.5rem);
+    }
+
+    .quiz-end-text {
+      margin: 0 0 16px;
+      font-size: clamp(1.3rem, 4vh, 2rem);
+    }
+
+    .quiz-end-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .quiz-end-actions button {
+      min-width: 260px;
+      padding: 14px 28px;
+      font-size: clamp(1.1rem, 3vh, 1.5rem);
+    }
+
+    /*
      * Hochkant (iPad hochkant, Handy): Antworten untereinander,
      * so sind sie breit wie die Antwortfelder der Karte.
      */
@@ -731,6 +833,57 @@
         </button>
       </div>
     </div>
+
+    <div id="quizEnd" class="quiz-end" hidden>
+      <h2 class="quiz-end-title">Geschafft!</h2>
+      <p id="quizEndText" class="quiz-end-text"></p>
+
+      <div class="quiz-end-actions">
+        <button id="quizEndToCollectionButton">
+          Zur Fragensammlung
+        </button>
+        <button id="quizRestartButton" class="secondary">
+          Nochmal von vorn
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal-backdrop" hidden>
+    <div
+      class="modal detail-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detailTitle"
+    >
+      <h2 id="detailTitle">Frage</h2>
+
+      <figure class="detail-field detail-question">
+        <figcaption>Frage</figcaption>
+        <img id="detailQuestion" alt="Frage">
+      </figure>
+
+      <div class="detail-answers">
+        <figure class="detail-field detail-correct">
+          <figcaption>✓ Richtige Antwort</figcaption>
+          <img id="detailCorrect" alt="Richtige Antwort">
+        </figure>
+        <figure class="detail-field">
+          <figcaption>Falsche Antwort</figcaption>
+          <img id="detailWrong1" alt="Falsche Antwort 1">
+        </figure>
+        <figure class="detail-field">
+          <figcaption>Falsche Antwort</figcaption>
+          <img id="detailWrong2" alt="Falsche Antwort 2">
+        </figure>
+        <figure class="detail-field">
+          <figcaption>Falsche Antwort</figcaption>
+          <img id="detailWrong3" alt="Falsche Antwort 3">
+        </figure>
+      </div>
+
+      <button id="detailCloseButton" class="modal-ok">Schließen</button>
+    </div>
   </div>
 
   <div class="hidden-work-area">
@@ -819,6 +972,25 @@
     const answerBoxD = document.getElementById("answerBoxD");
     const quizAnswers = document.querySelector(".quiz-answers");
 
+    const quizEnd = document.getElementById("quizEnd");
+    const quizEndText = document.getElementById("quizEndText");
+    const quizEndToCollectionButton =
+      document.getElementById("quizEndToCollectionButton");
+    const quizRestartButton =
+      document.getElementById("quizRestartButton");
+
+    const detailModal = document.getElementById("detailModal");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailCloseButton =
+      document.getElementById("detailCloseButton");
+    const detailImages = {
+      question: document.getElementById("detailQuestion"),
+      correct: document.getElementById("detailCorrect"),
+      wrong1: document.getElementById("detailWrong1"),
+      wrong2: document.getElementById("detailWrong2"),
+      wrong3: document.getElementById("detailWrong3")
+    };
+
     const revealButton = document.getElementById("revealButton");
     const backButton = document.getElementById("backButton");
     const fullscreenButton =
@@ -833,6 +1005,13 @@
     let activeLayout = null;
     let questions = [];
     let currentQuizIndex = 0;
+
+    /*
+     * Reihenfolge der Antworten je Frage, einmal beim Quizstart
+     * gemischt. Beim Zurückblättern bleibt so jede Antwort unter
+     * demselben Buchstaben.
+     */
+    let quizAnswerOrders = [];
     let correctLetter = null;
     let isProcessing = false;
 
@@ -997,6 +1176,21 @@
 
     introOkButton.addEventListener("click", () => {
       introModal.style.display = "none";
+    });
+
+    quizEndToCollectionButton.addEventListener("click", leaveQuiz);
+    quizRestartButton.addEventListener("click", startQuiz);
+
+    detailCloseButton.addEventListener("click", closeQuestionDetail);
+    detailModal.addEventListener("click", event => {
+      if (event.target === detailModal) {
+        closeQuestionDetail();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !detailModal.hidden) {
+        closeQuestionDetail();
+      }
     });
 
     imageInput.addEventListener("change", handleFileSelection);
@@ -1185,6 +1379,18 @@
     }
 
     loadSavedQuestions();
+
+    /*
+     * Offline-Betrieb: sw.js speichert die App beim ersten Öffnen,
+     * danach startet sie auch ohne Internet.
+     */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(error => {
+          console.warn("Offline-Speicher nicht verfügbar.", error);
+        });
+      });
+    }
 
     function setProgress(done, total) {
       if (total <= 0) {
@@ -2008,6 +2214,13 @@
         const image = document.createElement("img");
         image.src = item.question;
         image.alt = `Vorschau Frage ${index + 1}`;
+        image.className = "question-thumb";
+        image.onclick = () => openQuestionDetail(index);
+
+        const view = document.createElement("button");
+        view.className = "secondary view-question-button";
+        view.textContent = "Ansehen";
+        view.onclick = () => openQuestionDetail(index);
 
         const actions = document.createElement("div");
         actions.className = "question-actions";
@@ -2029,12 +2242,28 @@
         remove.textContent = "Löschen";
         remove.onclick = () => deleteQuestion(index);
 
-        actions.append(up, down, remove);
+        actions.append(view, up, down, remove);
         box.append(title, image, actions);
         questionList.appendChild(box);
       });
 
       updateButtonStates();
+    }
+
+    function openQuestionDetail(index) {
+      const item = questions[index];
+
+      detailTitle.textContent = `Frage ${index + 1}`;
+      Object.entries(detailImages).forEach(([key, image]) => {
+        image.src = item[key];
+      });
+
+      detailModal.hidden = false;
+      detailCloseButton.focus();
+    }
+
+    function closeQuestionDetail() {
+      detailModal.hidden = true;
     }
 
     function moveQuestion(index, direction) {
@@ -2078,6 +2307,11 @@
       }
 
       currentQuizIndex = 0;
+      quizAnswerOrders = questions.map(() =>
+        shuffleArray(["correct", "wrong1", "wrong2", "wrong3"])
+      );
+
+      quizEnd.hidden = true;
       editorView.style.display = "none";
       quizView.style.display = "block";
       showQuizQuestion(currentQuizIndex);
@@ -2093,26 +2327,7 @@
 
       quizQuestionImage.src = item.question;
 
-      const answers = [
-        {
-          image: item.correct,
-          isCorrect: true
-        },
-        {
-          image: item.wrong1,
-          isCorrect: false
-        },
-        {
-          image: item.wrong2,
-          isCorrect: false
-        },
-        {
-          image: item.wrong3,
-          isCorrect: false
-        }
-      ];
-
-      const shuffled = shuffleArray(answers);
+      const order = quizAnswerOrders[index];
       const letters = ["A", "B", "C", "D"];
 
       const elements = {
@@ -2124,11 +2339,11 @@
 
       correctLetter = null;
 
-      shuffled.forEach((answer, index) => {
-        const letter = letters[index];
-        elements[letter].src = answer.image;
+      order.forEach((key, position) => {
+        const letter = letters[position];
+        elements[letter].src = item[key];
 
-        if (answer.isCorrect) {
+        if (key === "correct") {
           correctLetter = letter;
         }
       });
@@ -2188,12 +2403,22 @@
 
     function showNextQuestion() {
       if (currentQuizIndex >= questions.length - 1) {
-        leaveQuiz();
+        showQuizEnd();
         return;
       }
 
       currentQuizIndex++;
       showQuizQuestion(currentQuizIndex);
+    }
+
+    function showQuizEnd() {
+      removeCorrectHighlight();
+
+      const count = questions.length;
+      quizEndText.textContent =
+        `Alle ${count} ${count === 1 ? "Frage" : "Fragen"} geschafft.`;
+      quizEnd.hidden = false;
+      quizEndToCollectionButton.focus();
     }
 
     function confirmBackToEditor() {
@@ -2210,6 +2435,7 @@
       }
 
       quizView.style.display = "none";
+      quizEnd.hidden = true;
       editorView.style.display = "block";
       removeCorrectHighlight();
     }
